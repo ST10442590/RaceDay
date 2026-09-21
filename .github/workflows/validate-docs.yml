@@ -1,0 +1,80 @@
+name: Validate Part 1 docs
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  check-structure:
+    name: Check repository structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check /docs folder exists
+        run: |
+          test -d docs || { echo "::error::/docs folder is missing"; exit 1; }
+          echo "/docs folder found"
+
+      - name: Check required files
+        run: |
+          fail=0
+          ls docs/*.png docs/*.pdf 2>/dev/null | grep -qi erd \
+            && echo "ERD found" || { echo "::error::ERD (PNG or PDF) missing in /docs"; fail=1; }
+          ls docs/*.md docs/*.pdf 2>/dev/null | grep -qi endpoint \
+            && echo "Endpoint plan found" || { echo "::error::Endpoint plan missing in /docs"; fail=1; }
+          ls docs/*.sql >/dev/null 2>&1 \
+            && echo "SQL script found" || { echo "::error::.sql script missing in /docs"; fail=1; }
+          test -f README.md \
+            && echo "README found" || { echo "::error::README.md missing"; fail=1; }
+          exit $fail
+
+      - name: Check SQL script creates every table
+        run: |
+          for t in Roles Users EventTypes Events EventCategories Enrolments Results; do
+            grep -qi "CREATE TABLE $t" docs/*.sql || { echo "::error::No CREATE TABLE for $t"; exit 1; }
+            echo "CREATE TABLE $t found"
+          done
+
+  run-sql-script:
+    name: Run SQL script on a clean SQL Server
+    runs-on: ubuntu-latest
+    needs: check-structure
+    env:
+      SA_PASSWORD: RaceDay_CI_Passw0rd
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start SQL Server 2022
+        run: |
+          docker run -d --name sql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$SA_PASSWORD" \
+            -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
+
+      - name: Wait for SQL Server
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -Q "SELECT 1" >/dev/null 2>&1; then
+              echo "SQL Server is ready"; exit 0
+            fi
+            echo "Waiting... ($i)"; sleep 5
+          done
+          docker logs sql; exit 1
+
+      - name: Run RaceDay.sql
+        run: |
+          docker cp docs/RaceDay.sql sql:/tmp/RaceDay.sql
+          docker exec sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -b -i /tmp/RaceDay.sql
+
+      - name: Verify seed data minimums
+        run: |
+          docker exec sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -b -d RaceDayDB -Q "
+            IF (SELECT COUNT(*) FROM Users WHERE RoleId = 1) < 2 THROW 50001, 'Need 2 organisers', 1;
+            IF (SELECT COUNT(*) FROM Users WHERE RoleId = 2) < 2 THROW 50002, 'Need 2 participants', 1;
+            IF (SELECT COUNT(*) FROM Events) < 3 THROW 50003, 'Need 3 events', 1;
+            IF EXISTS (SELECT 1 FROM Events e WHERE NOT EXISTS (SELECT 1 FROM EventCategories c WHERE c.EventId = e.EventId))
+              THROW 50004, 'Every event needs a category', 1;
+            IF (SELECT COUNT(*) FROM Enrolments) < 1 THROW 50005, 'Need sample enrolments', 1;
+            PRINT 'Seed data OK';"
