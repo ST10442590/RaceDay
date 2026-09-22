@@ -56,4 +56,4 @@ The workflow checks that `/docs` holds the ERD, endpoint plan and SQL script, th
 
 ## Video presentation
 
-Part 1 walkthrough: **[YouTube link – add here]**
+Part 1 walkthrough: **https://youtu.be/9dK51eOxbsc**
