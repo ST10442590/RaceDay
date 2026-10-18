@@ -12,7 +12,7 @@ This repository is built in three parts for PROG6212 (Programming 2B):
 
 ## Roles
 
-**Organiser** – creates, edits and deletes their own events; manages each event's categories (e.g. 10km, 21.1km); views everyone enrolled in their events; captures and corrects participant results.
+**Organiser** – registers an account; creates, edits and deletes their own events; manages each event's categories (e.g. 10km, 21.1km); views everyone enrolled in their events; captures and corrects participant results.
 
 **Participant** – registers an account; browses and filters events; enters an event by choosing a category; views their own enrolments; tracks their personal finish times and positions; manages their profile.
 
@@ -20,8 +20,7 @@ This repository is built in three parts for PROG6212 (Programming 2B):
 
 ```
 /docs
-  RaceDay_ERD.png          Entity Relationship Diagram (also as PDF)
-  RaceDay_ERD.pdf
+  RaceDay_ERD.png          Entity Relationship Diagram
   API_Endpoint_Plan.md     Every planned endpoint with role, body and responses
   RaceDay.sql              Creates RaceDayDB, all tables, constraints and seed data
 /.github/workflows
@@ -40,9 +39,10 @@ This repository is built in three parts for PROG6212 (Programming 2B):
 ## Design decisions
 
 - **7 entities:** Roles, Users, EventTypes, Events, EventCategories, Enrolments, Results.
-- **Users ↔ EventCategories is many-to-many**, resolved by the `Enrolments` junction table. A participant enters an event by choosing a category, so the event is reached through the category.
+- **Users ↔ EventCategories is many-to-many**, resolved by the `Enrolments` junction table, which records the Participant, the Event and the selected Category. A composite foreign key makes sure the category belongs to that event.
 - **Results is one-to-zero-or-one with Enrolments**: a result can only exist for someone who entered.
-- **Positions are calculated, not stored**, in `vw_EventResults`, so corrected times never leave stale positions.
+- **Categories can be age-based or distance-based** (e.g. Under 20, Senior, 10km, 21km), set by `CategoryType`.
+- **Organisers capture finish time and finishing position** in `Results`; DNF/DNS/DQ results have neither.
 - **Lookup tables** (Roles, EventTypes) instead of free text keep values consistent.
 
 ### Differences between the ERD and the SQL script
