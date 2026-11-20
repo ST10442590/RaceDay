@@ -1,0 +1,123 @@
+@model EntriesViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = $"Entries · {e.Name}";
+    var raceDayReached = e.EventDate <= DateOnly.FromDateTime(DateTime.Today);
+}
+
+<section class="rd-page-head">
+    <div class="container d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <a class="text-white-50 small text-decoration-none" asp-controller="Organiser" asp-action="Dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+            <h1>Entries and results</h1>
+            <p>@e.Name · @UiHelpers.Date(e.EventDate) · <span class="rd-badge @UiHelpers.EventStatusClass(e.Status)">@e.Status</span></p>
+        </div>
+        <div class="text-end">
+            <div class="rd-display" style="font-size:2.6rem;line-height:1">@Model.ConfirmedCount</div>
+            <div class="text-white-50 small">confirmed entries</div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    @if (!raceDayReached)
+    {
+        <div class="alert alert-info"><i class="bi bi-info-circle"></i> Results can be captured from race day onwards. Until then this is your entry list.</div>
+    }
+
+    @if (Model.Entries.Count == 0)
+    {
+        <div class="rd-empty">
+            <i class="bi bi-people"></i>
+            <h3>No entries yet</h3>
+            <p class="mb-0">Entries appear here as participants sign up. Make sure the event status is <strong>Open</strong>.</p>
+        </div>
+    }
+
+    @foreach (var category in Model.Entries.GroupBy(x => x.CategoryName))
+    {
+        <h2 class="h4 mt-4">@category.Key <span class="text-muted fs-6">(@category.Count(x => x.Status == EnrolmentStatuses.Confirmed) confirmed)</span></h2>
+        <div class="rd-table">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr><th>Race no.</th><th>Participant</th><th>Entry</th><th>Result</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in category)
+                    {
+                        Model.ResultsByEnrolment.TryGetValue(entry.EnrolmentId, out var result);
+                        var canCapture = raceDayReached && entry.Status == EnrolmentStatuses.Confirmed;
+                        <tr>
+                            <td class="fw-bold">@entry.RaceNumber</td>
+                            <td>
+                                @entry.ParticipantName
+                                <div class="small text-muted">@entry.ParticipantEmail</div>
+                            </td>
+                            <td><span class="rd-badge @UiHelpers.EnrolmentStatusClass(entry.Status)">@entry.Status</span></td>
+                            <td style="min-width:30rem">
+                                @if (canCapture)
+                                {
+                                    <form asp-action="SaveResult" method="post" class="d-flex flex-wrap gap-2 align-items-center js-result-form">
+                                        <input type="hidden" name="eventId" value="@e.EventId" />
+                                        <input type="hidden" name="enrolmentId" value="@entry.EnrolmentId" />
+                                        @if (result is not null)
+                                        {
+                                            <input type="hidden" name="resultId" value="@result.ResultId" />
+                                        }
+                                        <select name="resultStatus" class="form-select form-select-sm js-result-status" style="width:auto">
+                                            @foreach (var s in ResultStatuses.All)
+                                            {
+                                                <option value="@s" selected="@((result?.ResultStatus ?? ResultStatuses.Finished) == s)">@ResultStatuses.Describe(s)</option>
+                                            }
+                                        </select>
+                                        <input name="finishTime" type="text" inputmode="numeric" pattern="\d{1,2}:\d{2}:\d{2}" class="form-control form-control-sm js-finish" style="width:7rem"
+                                               value="@(result?.FinishTime?.ToString("H:mm:ss"))" placeholder="h:mm:ss" title="Finish time, for example 1:38:42" />
+                                        <input name="finishPosition" type="number" min="1" class="form-control form-control-sm js-finish" style="width:5.5rem"
+                                               value="@result?.FinishPosition" placeholder="Pos" title="Position in category" />
+                                        <button class="btn btn-sm @(result is null ? "btn-rd" : "btn-outline-secondary")" type="submit">
+                                            @(result is null ? "Save" : "Update")
+                                        </button>
+                                    </form>
+                                    @if (result is not null)
+                                    {
+                                        <form asp-action="DeleteResult" method="post" class="d-inline" onsubmit="return confirm('Remove this result?');">
+                                            <input type="hidden" name="eventId" value="@e.EventId" />
+                                            <input type="hidden" name="resultId" value="@result.ResultId" />
+                                            <button class="btn btn-link btn-sm text-danger p-0 mt-1" type="submit">Remove result</button>
+                                        </form>
+                                    }
+                                }
+                                else if (result is not null)
+                                {
+                                    <span class="rd-badge @UiHelpers.ResultStatusClass(result.ResultStatus)">@ResultStatuses.Describe(result.ResultStatus)</span>
+                                    <span class="ms-2">@UiHelpers.FinishTime(result.FinishTime)</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+@section Scripts {
+    <script>
+        // Only finishers have a time and position.
+        document.querySelectorAll('.js-result-form').forEach(function (form) {
+            var status = form.querySelector('.js-result-status');
+            var update = function () {
+                var finished = status.value === 'Finished';
+                form.querySelectorAll('.js-finish').forEach(function (input) {
+                    input.disabled = !finished;
+                    input.required = finished;
+                });
+            };
+            status.addEventListener('change', update);
+            update();
+        });
+    </script>
+}
