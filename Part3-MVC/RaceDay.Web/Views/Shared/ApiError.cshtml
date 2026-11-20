@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "Something went wrong";
+}
+<div class="container">
+    <div class="rd-empty my-5">
+        <i class="bi bi-exclamation-octagon"></i>
+        <h2>We couldn't load that</h2>
+        <p class="mb-3">@(ViewBag.ErrorMessage ?? "The RaceDay API returned an error.")</p>
+        <a class="btn btn-rd" asp-controller="Home" asp-action="Index">Back to events</a>
+    </div>
+</div>

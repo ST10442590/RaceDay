@@ -1,31 +1,646 @@
-html {
-  font-size: 14px;
+/* RaceDay brand: deep night-navy, race-bib orange and a finish-line lime. */
+:root {
+    --rd-navy: #0b1b2e;
+    --rd-navy-2: #13294a;
+    --rd-orange: #ff5a1f;
+    --rd-orange-dark: #e04812;
+    --rd-lime: #c6f432;
+    --rd-ink: #1b2533;
+    --rd-muted: #5d6b7c;
+    --rd-paper: #f5f6f8;
+    --rd-card: #ffffff;
+    --rd-line: #e3e7ec;
+    --rd-radius: 14px;
 }
 
-@media (min-width: 768px) {
-  html {
+html {
     font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    font-family: "Barlow", system-ui, sans-serif;
+    color: var(--rd-ink);
+    background: var(--rd-paper);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+h1, h2, h3, h4, .rd-display {
+    font-family: "Barlow Condensed", "Barlow", sans-serif;
+    font-weight: 700;
+    letter-spacing: .01em;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+a {
+    color: var(--rd-orange-dark);
+}
+
+.rd-main {
+    flex: 1 0 auto;
+    padding-bottom: 3rem;
+}
+
+/* ---------- Navigation ---------- */
+.rd-navbar {
+    background: var(--rd-navy);
+    border-bottom: 3px solid var(--rd-orange);
+}
+
+.rd-brand {
+    font-family: "Barlow Condensed", sans-serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 1.7rem;
+    letter-spacing: .02em;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.rd-brand-text span {
+    color: var(--rd-orange);
+}
+
+.rd-brand-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    background: var(--rd-orange);
+    color: #fff;
+    font-size: 1.1rem;
+    font-style: normal;
+}
+
+.rd-navbar .nav-link {
+    font-weight: 500;
+}
+
+    .rd-navbar .nav-link.active {
+        color: #fff;
+        box-shadow: inset 0 -3px 0 var(--rd-lime);
+    }
+
+.rd-role-pill {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    background: rgba(255, 255, 255, .12);
+    border-radius: 999px;
+    padding: .1rem .5rem;
+    margin-left: .25rem;
+}
+
+/* ---------- Buttons ---------- */
+.btn-rd {
+    background: var(--rd-orange);
+    border-color: var(--rd-orange);
+    color: #fff;
+    font-weight: 600;
+}
+
+    .btn-rd:hover, .btn-rd:focus {
+        background: var(--rd-orange-dark);
+        border-color: var(--rd-orange-dark);
+        color: #fff;
+    }
+
+.btn-rd-outline {
+    border: 2px solid var(--rd-navy);
+    color: var(--rd-navy);
+    font-weight: 600;
+}
+
+    .btn-rd-outline:hover {
+        background: var(--rd-navy);
+        color: #fff;
+    }
+
+/* ---------- Hero ---------- */
+.rd-hero {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    background: radial-gradient(circle at 85% 20%, rgba(255, 90, 31, .45), transparent 45%), radial-gradient(circle at 10% 90%, rgba(198, 244, 50, .18), transparent 40%), linear-gradient(135deg, var(--rd-navy) 0%, var(--rd-navy-2) 100%);
+    padding: 3.5rem 0 4.5rem;
+}
+
+    /* Lane lines across the hero, like an athletics track. */
+    .rd-hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -10% -40px -10%;
+        height: 120px;
+        background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(255, 255, 255, .07) 46px 50px);
+        transform: skewX(-30deg);
+    }
+
+    .rd-hero h1 {
+        font-size: clamp(2.4rem, 5vw, 3.8rem);
+        line-height: 1;
+        font-style: italic;
+    }
+
+        .rd-hero h1 em {
+            color: var(--rd-lime);
+            font-style: italic;
+        }
+
+    .rd-hero p {
+        color: rgba(255, 255, 255, .78);
+        font-size: 1.15rem;
+        max-width: 34rem;
+    }
+
+.rd-page-head {
+    background: linear-gradient(135deg, var(--rd-navy) 0%, var(--rd-navy-2) 100%);
+    color: #fff;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+    .rd-page-head h1 {
+        margin: 0;
+        font-style: italic;
+    }
+
+    .rd-page-head p {
+        color: rgba(255, 255, 255, .72);
+        margin: .25rem 0 0;
+    }
+
+/* ---------- Filter bar ---------- */
+.rd-filter {
+    background: var(--rd-card);
+    border-radius: var(--rd-radius);
+    box-shadow: 0 10px 30px rgba(11, 27, 46, .12);
+    padding: 1rem;
+    margin-top: -2.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* ---------- Cards ---------- */
+.rd-card {
+    background: var(--rd-card);
+    border: 1px solid var(--rd-line);
+    border-radius: var(--rd-radius);
+    overflow: hidden;
+    height: 100%;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+    .rd-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(11, 27, 46, .12);
+    }
+
+.rd-card-banner {
+    position: relative;
+    aspect-ratio: 16 / 8;
+    background-size: cover;
+    background-position: center;
+    display: grid;
+    place-items: center;
+    color: rgba(255, 255, 255, .9);
+    font-size: 3rem;
+}
+
+    .rd-card-banner .rd-badge {
+        position: absolute;
+        top: .75rem;
+        left: .75rem;
+    }
+
+.rd-date-chip {
+    position: absolute;
+    right: .75rem;
+    bottom: -1.2rem;
+    background: var(--rd-card);
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .15);
+    text-align: center;
+    padding: .3rem .7rem;
+    line-height: 1;
+    color: var(--rd-ink);
+}
+
+    .rd-date-chip strong {
+        display: block;
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 1.6rem;
+    }
+
+    .rd-date-chip small {
+        text-transform: uppercase;
+        font-size: .7rem;
+        letter-spacing: .08em;
+        color: var(--rd-orange-dark);
+        font-weight: 600;
+    }
+
+.rd-card-body {
+    padding: 1.4rem 1.1rem 1.1rem;
+}
+
+    .rd-card-body h3 {
+        font-size: 1.45rem;
+        margin-bottom: .25rem;
+    }
+
+    .rd-card-body a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+.rd-meta {
+    color: var(--rd-muted);
+    font-size: .92rem;
+}
+
+    .rd-meta i {
+        color: var(--rd-orange);
+    }
+
+/* Placeholder banners when no image has been uploaded yet. */
+.type-run {
+    background-image: linear-gradient(135deg, #ff5a1f, #b5179e);
+}
+
+.type-walk {
+    background-image: linear-gradient(135deg, #16a085, #2c7be5);
+}
+
+.type-cycle {
+    background-image: linear-gradient(135deg, #2c3e9e, #00b4d8);
+}
+
+/* ---------- Colour-coded statuses ---------- */
+.rd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    border-radius: 999px;
+    padding: .25rem .7rem;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    white-space: nowrap;
+}
+
+    .rd-badge::before {
+        content: "";
+        width: .5rem;
+        height: .5rem;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+.status-open {
+    background: #e3f9e5;
+    color: #16794a;
+}
+
+.status-upcoming {
+    background: #e7efff;
+    color: #2753c4;
+}
+
+.status-closed {
+    background: #fff4d6;
+    color: #a15c00;
+}
+
+.status-completed {
+    background: #eceaf9;
+    color: #5a3fb5;
+}
+
+.status-cancelled {
+    background: #fde6e6;
+    color: #c0262d;
+}
+
+.rd-type-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    background: rgba(11, 27, 46, .06);
+    color: var(--rd-navy);
+    border-radius: 999px;
+    padding: .2rem .6rem;
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+/* ---------- Event detail ---------- */
+.rd-event-hero {
+    position: relative;
+    min-height: 320px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    color: #fff;
+}
+
+    .rd-event-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(11, 27, 46, .05) 20%, rgba(11, 27, 46, .9) 100%);
+    }
+
+    .rd-event-hero .container {
+        position: relative;
+        padding-bottom: 2rem;
+    }
+
+    .rd-event-hero h1 {
+        font-size: clamp(2.2rem, 5vw, 3.4rem);
+        font-style: italic;
+        margin: .5rem 0;
+    }
+
+.rd-panel {
+    background: var(--rd-card);
+    border: 1px solid var(--rd-line);
+    border-radius: var(--rd-radius);
+    padding: 1.4rem;
+}
+
+    .rd-panel h2 {
+        font-size: 1.6rem;
+    }
+
+.rd-fact {
+    display: flex;
+    gap: .8rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+    .rd-fact i {
+        font-size: 1.3rem;
+        color: var(--rd-orange);
+    }
+
+    .rd-fact small {
+        display: block;
+        color: var(--rd-muted);
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        font-size: .72rem;
+    }
+
+.rd-category-option {
+    border: 2px solid var(--rd-line);
+    border-radius: 12px;
+    padding: .8rem 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: border-color .12s ease, background .12s ease;
+}
+
+    .rd-category-option:hover {
+        border-color: var(--rd-orange);
+    }
+
+.btn-check:checked + .rd-category-option {
+    border-color: var(--rd-orange);
+    background: #fff3ee;
+}
+
+.btn-check:disabled + .rd-category-option {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.rd-places {
+    font-size: .82rem;
+    color: var(--rd-muted);
+}
+
+    .rd-places.low {
+        color: #c0262d;
+        font-weight: 600;
+    }
+
+.rd-race-number {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1;
+    background: #fff;
+    color: var(--rd-navy);
+    border: 3px solid var(--rd-navy);
+    border-radius: 8px;
+    padding: .4rem 1rem;
+    display: inline-block;
+}
+
+.rd-weather {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+    background: linear-gradient(135deg, #eef6ff, #ffffff);
+}
+
+.rd-weather-icon {
+    font-size: 3rem;
+    color: #f2a900;
+}
+
+.rd-weather-temp {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+    .rd-weather-temp span {
+        font-size: 1.3rem;
+        color: var(--rd-muted);
+    }
+
+/* ---------- Tables ---------- */
+.rd-table {
+    background: var(--rd-card);
+    border-radius: var(--rd-radius);
+    overflow-x: auto;
+    border: 1px solid var(--rd-line);
+}
+
+    .rd-table table {
+        margin: 0;
+    }
+
+    .rd-table thead th {
+        background: var(--rd-navy);
+        color: #fff;
+        font-weight: 600;
+        font-size: .82rem;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        border: 0;
+    }
+
+.rd-position {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.rd-podium-1 {
+    color: #c99700;
+}
+
+.rd-podium-2 {
+    color: #7d8a96;
+}
+
+.rd-podium-3 {
+    color: #b0643a;
+}
+
+/* ---------- Dashboard ---------- */
+.rd-stat {
+    background: var(--rd-card);
+    border-radius: var(--rd-radius);
+    border: 1px solid var(--rd-line);
+    padding: 1.1rem 1.2rem;
+    border-left: 5px solid var(--rd-orange);
+}
+
+    .rd-stat strong {
+        display: block;
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 2.4rem;
+        line-height: 1;
+    }
+
+    .rd-stat span {
+        color: var(--rd-muted);
+        font-size: .9rem;
+    }
+
+.rd-thumb {
+    width: 64px;
+    height: 44px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+/* ---------- Results ---------- */
+.rd-result-card {
+    background: var(--rd-card);
+    border: 1px solid var(--rd-line);
+    border-radius: var(--rd-radius);
+    padding: 1.2rem 1.4rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.2rem;
+    align-items: center;
+}
+
+.rd-result-place {
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    background: var(--rd-navy);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    line-height: 1;
+}
+
+    .rd-result-place strong {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 2rem;
+        display: block;
+    }
+
+    .rd-result-place small {
+        font-size: .7rem;
+        color: rgba(255, 255, 255, .7);
+    }
+
+.rd-result-time {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* ---------- Forms ---------- */
+.rd-auth {
+    max-width: 30rem;
+    margin: 3rem auto;
+}
+
+.rd-form-card {
+    background: var(--rd-card);
+    border-radius: var(--rd-radius);
+    border: 1px solid var(--rd-line);
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(11, 27, 46, .06);
+}
+
+.form-label {
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--rd-orange);
+    box-shadow: 0 0 0 .2rem rgba(255, 90, 31, .2);
+}
+
+.rd-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--rd-muted);
+    background: var(--rd-card);
+    border: 2px dashed var(--rd-line);
+    border-radius: var(--rd-radius);
+}
+
+    .rd-empty i {
+        font-size: 2.5rem;
+        color: var(--rd-orange);
+        display: block;
+        margin-bottom: .5rem;
+    }
+
+.rd-flash {
+    border-radius: 12px;
+}
+
+/* ---------- Footer ---------- */
+.rd-footer {
+    background: var(--rd-navy);
+    color: #fff;
+    padding: 1.4rem 0;
+    font-size: .9rem;
+    border-top: 3px solid var(--rd-orange);
+}
+
+@media (max-width: 575.98px) {
+    .rd-result-card {
+        grid-template-columns: auto 1fr;
+    }
+
+        .rd-result-card > :last-child {
+            grid-column: 1 / -1;
+        }
 }

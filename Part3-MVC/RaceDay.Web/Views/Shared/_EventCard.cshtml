@@ -1,0 +1,27 @@
+@model EventSummary
+@{
+    var hasImage = !string.IsNullOrEmpty(Model.ImageUrl);
+    var bannerClass = hasImage ? string.Empty : UiHelpers.EventTypeClass(Model.EventType);
+    var bannerStyle = hasImage ? $"background-image:url('{Model.ImageUrl}')" : null;
+}
+<article class="rd-card">
+    <a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId" class="text-decoration-none">
+        <div class="rd-card-banner @bannerClass" style="@bannerStyle">
+            <span class="rd-badge @UiHelpers.EventStatusClass(Model.Status)">@UiHelpers.EventStatusLabel(Model.Status)</span>
+            @if (!hasImage)
+            {
+                <i class="bi @UiHelpers.EventTypeIcon(Model.EventType)"></i>
+            }
+            <div class="rd-date-chip">
+                <strong>@Model.EventDate.Day</strong>
+                <small>@Model.EventDate.ToString("MMM")</small>
+            </div>
+        </div>
+    </a>
+    <div class="rd-card-body">
+        <span class="rd-type-pill"><i class="bi @UiHelpers.EventTypeIcon(Model.EventType)"></i> @Model.EventType · @UiHelpers.Distance(Model.DistanceKm)</span>
+        <h3 class="mt-2"><a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId">@Model.Name</a></h3>
+        <div class="rd-meta"><i class="bi bi-geo-alt-fill"></i> @Model.VenueName, @Model.City</div>
+        <div class="rd-meta"><i class="bi bi-clock-fill"></i> @UiHelpers.Date(Model.EventDate) · @UiHelpers.Time(Model.StartTime)</div>
+    </div>
+</article>
