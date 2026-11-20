@@ -1,8 +1,84 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Find your next race";
+    var openCount = Model.Events.Count(e => e.Status == EventStatuses.Open);
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="rd-hero">
+    <div class="container position-relative" style="z-index:1">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1>Find your next<br /><em>finish line.</em></h1>
+                <p class="mt-3">Fun runs, walks, marathons and cycle tours across South Africa. Pick your race, choose your category and get your race number in seconds.</p>
+            </div>
+            <div class="col-lg-4 d-none d-lg-block text-end">
+                <div class="rd-display" style="font-size:5rem;line-height:1;color:var(--rd-lime)">@openCount</div>
+                <div class="text-white-50 text-uppercase small fw-semibold">events open for entries</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <form class="rd-filter row g-2 align-items-end" method="get" asp-action="Index">
+        <div class="col-md-4">
+            <label class="form-label" for="search">Search</label>
+            <input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Event, venue or city" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label" for="type">Type</label>
+            <select class="form-select" id="type" name="type">
+                <option value="">All types</option>
+                @foreach (var t in Model.EventTypes)
+                {
+                    <option value="@t.TypeName" selected="@(Model.Type == t.TypeName)">@t.TypeName</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label" for="province">Province</label>
+            <select class="form-select" id="province" name="province">
+                <option value="">All provinces</option>
+                @foreach (var p in HomeViewModel.Provinces)
+                {
+                    <option value="@p" selected="@(Model.Province == p)">@p</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2 align-items-center">
+            <div class="form-check me-auto">
+                <input class="form-check-input" type="checkbox" id="includePast" name="includePast" value="true" checked="@Model.IncludePast" />
+                <label class="form-check-label small" for="includePast">Past events</label>
+            </div>
+            <button class="btn btn-rd" type="submit"><i class="bi bi-search"></i> Find</button>
+        </div>
+    </form>
+
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="alert alert-warning mt-4"><i class="bi bi-plug"></i> @Model.ErrorMessage</div>
+    }
+    else if (Model.Events.Count == 0)
+    {
+        <div class="rd-empty mt-4">
+            <i class="bi bi-calendar-x"></i>
+            <h3>No events match</h3>
+            <p class="mb-0">Try a different type or province, or include past events.</p>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-baseline mt-4 mb-3">
+            <h2 class="m-0">@(Model.IncludePast ? "All events" : "Upcoming events")</h2>
+            <span class="text-muted small">@Model.Events.Count event@(Model.Events.Count == 1 ? "" : "s")</span>
+        </div>
+        <div class="row g-4">
+            @foreach (var e in Model.Events)
+            {
+                <div class="col-sm-6 col-lg-4">
+                    <partial name="_EventCard" model="e" />
+                </div>
+            }
+        </div>
+    }
 </div>

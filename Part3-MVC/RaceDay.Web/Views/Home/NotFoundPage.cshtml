@@ -1,0 +1,12 @@
+@{
+    int code = ViewBag.Code ?? 404;
+    ViewData["Title"] = code == 404 ? "Not found" : "Error";
+}
+<div class="container">
+    <div class="rd-empty my-5">
+        <i class="bi bi-signpost-split"></i>
+        <h2>@(code == 404 ? "Wrong turn" : $"Error {code}")</h2>
+        <p class="mb-3">@(code == 404 ? "That page or event doesn't exist." : "Something went wrong with that request.")</p>
+        <a class="btn btn-rd" asp-controller="Home" asp-action="Index">Back to events</a>
+    </div>
+</div>
