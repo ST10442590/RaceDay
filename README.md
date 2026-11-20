@@ -8,7 +8,7 @@ This repository is built in three parts for PROG6212 (Programming 2B):
 |---|---|---|
 | 1 | System planning: ERD, API endpoint plan, SQL database script | ✅ Complete |
 | 2 | RESTful API in C#, session authentication, unit tests, GitHub Actions CI | ✅ Complete |
-| 3 | MVC web app, Azure Blob Storage, Docker | ⏳ |
+| 3 | ASP.NET Core MVC front end, Azure Blob Storage, Docker | ✅ Complete |
 
 ## Roles
 
@@ -27,20 +27,33 @@ An Organiser can only manage events they created. Attempting to change another O
   RaceDay.sql                Creates RaceDayDB, all tables, constraints and seed data
   ci-green-build.png         Part 1 CI screenshot
   ci-part2-green-build.png   Part 2 CI screenshot
+  ci-part3-green-build.png   Part 3 CI screenshot
 
 /Part2-API                   Part 2 solution
   RaceDay.Part2.slnx
   RaceDay.Api/               ASP.NET Core Web API
-    Controllers/             Auth, Users, Events, Categories, Enrolments, Results, EventTypes
+    Controllers/             Auth, Users, Events, Categories, Enrolments, Results, EventTypes,
+                             EventImages (Azure Blob Storage), EventWeather (Open-Meteo)
     Data/                    DbContext, design-time factory, seed data
     Migrations/              EF Core Code-First migrations
     Models/                  Entities and request/response DTOs
     Security/                Session helpers and the role filter
-  RaceDay.Api.Tests/         25 xUnit tests
+    Services/                Azure Blob Storage image service
+  RaceDay.Api.Tests/         33 xUnit tests
+
+/Part3-MVC                   Part 3 front end
+  RaceDay.Web/               ASP.NET Core MVC app that consumes the API
+    Controllers/             Home, Events, Account, Participant, Organiser, Categories, Entries
+    Services/ApiClient.cs    The only class that talks to the API
+    Security/                MVC session helpers and the [RoleRequired] page filter
+    Views/                   Razor views, Bootstrap 5 with the RaceDay theme
+    Dockerfile               Multi-stage build for the MVC container
+
+RaceDay.slnx                 Whole solution: API, tests and MVC
 
 /.github/workflows
   validate-docs.yml          Checks /docs and runs the Part 1 SQL script on a clean SQL Server
-  build-and-test.yml         Builds the Part 2 solution and runs all unit tests on every push
+  build-and-test.yml         Builds the API and MVC, runs all unit tests, builds and smoke-tests the Docker image
 ```
 
 ---
@@ -76,7 +89,7 @@ The workflow checks that `/docs` holds the ERD, endpoint plan and SQL script, th
 
 ## Video presentation
 
-Part 2 walkthrough: **https://youtu.be/xtVdgdITsYQ**
+Part 1 walkthrough: **https://youtu.be/9dK51eOxbsc**
 
 ---
 
@@ -197,4 +210,165 @@ Each test builds its own in-memory database and a fake session, so tests are iso
 
 ## Video presentation
 
-Part 2 walkthrough: **[YouTube link – add here]**
+Part 2 walkthrough: **https://youtu.be/xtVdgdITsYQ**
+
+---
+
+# Part 3 – MVC web application
+
+## Technology
+
+- ASP.NET Core MVC (.NET 10) with Razor views and Bootstrap 5
+- A typed `HttpClient` (`Services/ApiClient.cs`) — the MVC app never touches the database; every read and write goes through the Part 2 API
+- Azure Blob Storage (`Azure.Storage.Blobs`) for event banner images, called from the API
+- Docker, with a multi-stage `Dockerfile` for the MVC app
+- Open-Meteo (free, no key) for live venue weather, called from the API
+
+## How the pieces fit together
+
+```
+Browser ──► RaceDay.Web (MVC, port 5200 / 8080 in Docker)
+              │  MVC session: user id, role, and the API's session cookie
+              ▼
+            RaceDay.Api (port 5120) ──► SQL Server (RaceDayDB)
+              │                    ──► Azure Blob Storage (event-banners container)
+              │                    ──► Open-Meteo (weather)
+```
+
+**Logging in across two apps.** The MVC login page posts the email and password to `POST /api/auth/login`. The API starts its own session and returns a `RaceDay.Session` cookie. The browser never sees that cookie: the MVC app stores it in the user's MVC session and sends it back on every API call made for that user (`ApiClient`). The MVC session also holds the user's id, name and role, which drive the navigation bar and the `[RoleRequired]` page filter. The API still enforces every role and ownership rule itself, so the MVC checks are for a clean experience, not the only line of defence. If the API forgets the session (for example after a restart), the next API call returns 401 and the MVC app logs the user out and asks them to log in again.
+
+## Setup and run
+
+**Prerequisites:** everything from Part 2, plus an Azure Storage account.
+
+### 1. Create the Azure Storage account (once)
+
+Created with the Azure CLI (`winget install -e --id Microsoft.AzureCLI`, then `az login`). Azure for Students only allows a few regions, listed by:
+
+```
+az policy assignment list --query "[].{name:displayName, regions:parameters.listOfAllowedLocations.value}" -o json
+```
+
+RaceDay uses **Italy North**, the closest allowed region:
+
+```
+az group create -n raceday-rg -l italynorth
+az storage account create -n racedayst10442590 -g raceday-rg -l italynorth --sku Standard_LRS --kind StorageV2 --allow-blob-public-access true
+az storage account update -n racedayst10442590 -g raceday-rg --min-tls-version TLS1_2
+```
+
+`--allow-blob-public-access true` lets each banner be served straight from its blob URL. Nobody can list the container or upload without the account key. The API creates the `event-banners` container itself on the first upload.
+
+### 2. Give the API the connection string
+
+The connection string is a secret, so it lives in .NET user secrets on your machine and is never committed. In Command Prompt, this copies it straight from Azure into the secret store without printing it:
+
+```
+cd Part2-API\RaceDay.Api
+@for /f "delims=" %i in ('az storage account show-connection-string -n racedayst10442590 -g raceday-rg -o tsv') do @dotnet user-secrets set "AzureStorage:ConnectionString" "%i" >nul
+```
+
+If a key is ever exposed, `az storage account keys renew -n racedayst10442590 -g raceday-rg --key key1 -o none` replaces it; then run the line above again.
+
+### 3. Run the API, then the MVC app (two terminals)
+
+```
+cd Part2-API/RaceDay.Api
+dotnet run
+```
+
+```
+cd Part3-MVC/RaceDay.Web
+dotnet run
+```
+
+Open **http://localhost:5200**. The MVC app finds the API through `Api:BaseUrl` in `Part3-MVC/RaceDay.Web/appsettings.json` (default `http://localhost:5120/`). Log in with any of the demo accounts from Part 2 (password `RaceDay#2026`).
+
+## Running in Docker
+
+The MVC app runs in a container; the API and SQL Server keep running on the host, and the container reaches the API through `host.docker.internal`.
+
+1. Start the API so it accepts connections from the container:
+```
+cd Part2-API/RaceDay.Api
+dotnet run --urls http://0.0.0.0:5120
+```
+2. From the repository root, build and run the MVC image:
+```
+docker build -t raceday-web Part3-MVC/RaceDay.Web
+docker run -d -p 8080:8080 --add-host=host.docker.internal:host-gateway --name raceday-web raceday-web
+```
+3. Open **http://localhost:8080**. Use a private window if you have also run the app on port 5200: browsers share `localhost` cookies across ports, and the container cannot read the other app's session cookie (it logs a harmless "Error unprotecting the session cookie" warning and starts a new session).
+
+To point the container at an API somewhere else, pass `-e Api__BaseUrl=http://<host>:<port>/`. To stop and remove it: `docker rm -f raceday-web`.
+
+## Pages
+
+| Who | Page | What it does |
+|---|---|---|
+| Everyone | Home | Browse upcoming events as cards with banner images and colour-coded statuses; filter by type, province and name; optionally include past events |
+| Everyone | Event detail | Date, times, venue, organiser, route link, categories with places left, and live venue weather |
+| Everyone | Results | Results board per category with positions, times and podium colours |
+| Participant | Enter Event | Choose a category on the event page; the API checks the deadline, capacity, age limits and duplicates, then issues a race number |
+| Participant | My events | Upcoming entries with race numbers (and cancel), past races with links to results |
+| Participant | My results | Finish times and positions, e.g. **"47th out of 312 finishers"**, plus totals, podiums and best position |
+| Participant / Organiser | Profile | Edit personal details; change password |
+| Organiser | Dashboard | Totals for events, races still to run, confirmed entries and results captured; every event with status, entries and quick actions |
+| Organiser | Create / edit event | All event details, and the status (Upcoming, Open, Closed, Completed, Cancelled); delete when there are no entries |
+| Organiser | Categories | Add, edit and remove age or distance categories, with entries-versus-capacity bars |
+| Organiser | Banner | Upload a JPG, PNG or WebP banner to Azure Blob Storage and preview it |
+| Organiser | Entries and results | Every entry grouped by category; capture, correct or remove each result from race day onwards |
+
+Visitors who open a protected page are sent to log in and brought back afterwards; a user with the wrong role sees an access denied page.
+
+## Azure Blob Storage integration
+
+1. The Organiser chooses an image on the **Banner** page. The MVC app checks the type and size, then sends the file to the API as `multipart/form-data` (`POST /api/events/{id}/image`). The MVC app never stores the file.
+2. The API checks the Organiser owns the event, validates the file again (JPG, PNG or WebP, up to 5 MB), and uploads it through `BlobImageStorage` to the `event-banners` container under a unique name (`event-{id}/{guid}.jpg`).
+3. The blob's URL is saved in the event's `ImageUrl` column, and the replaced banner (if any) is deleted from the container.
+4. Every MVC page that shows the event — home cards, event detail, dashboard, banner page — loads the image straight from that Azure URL.
+
+The connection string comes from configuration (user secrets), so no keys are in the repository. If storage is not configured the upload endpoint returns **503** with a clear message rather than failing silently.
+
+## UI design
+
+The RaceDay brand uses deep navy (`#0b1b2e`), race-bib orange (`#ff5a1f`) and finish-line lime (`#c6f432`), with Barlow Condensed headings for a sporty feel. Each event type has its own icon and placeholder banner (run, walk, cycle) until a real banner is uploaded. Statuses are colour-coded the same way on every page:
+
+| Colour | Event status | Entry status | Result |
+|---|---|---|---|
+| Green | Open | Confirmed | Finished |
+| Blue | Upcoming | – | Did not start |
+| Amber | Closed | Pending | Did not finish |
+| Purple | Completed | – | – |
+| Red | Cancelled | Cancelled | Disqualified |
+
+The navigation changes with the role (Dashboard and New event for Organisers; My events and My results for Participants), and every page works on a phone.
+
+## API additions for Part 3
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/events/{id}/image` | Upload or replace an event banner (Organiser, owner only) |
+| `DELETE /api/events/{id}/image` | Remove an event banner (Organiser, owner only) |
+| `GET /api/events/{id}/weather` | Race-day forecast at the venue, or today's weather if race day is more than 16 days away (public) |
+
+`GET /api/events` and `GET /api/events/mine` now include each event's `ImageUrl`, so list pages can show banners. Both new endpoints were in the Part 1 plan. The image upload returns the whole updated event (which includes `imageUrl`) rather than only `{ imageUrl }`, so the MVC app can refresh the page in one call, and it also accepts WebP.
+
+Eight new unit tests bring the total to **33**:
+
+| Area | What is tested |
+|---|---|
+| Banner upload | owner's upload saves the blob URL on the event; another Organiser gets 403; a non-image is rejected; replacing a banner deletes the old blob; 503 when storage is not configured |
+| Weather | forecast is parsed and coordinates are sent with a "." decimal point; event without coordinates returns 404; weather service failure returns 503 |
+
+Azure and Open-Meteo are replaced with in-memory fakes in the tests, so they never touch the internet.
+
+## CI/CD
+
+`build-and-test.yml` now builds the whole solution (`RaceDay.slnx`: API, tests and MVC), runs all 33 unit tests, then builds the MVC Docker image, starts a container and checks the site responds.
+
+![Part 3 CI build](docs/ci-part3-green-build.png)
+
+## Video presentation
+
+Part 3 walkthrough: **[YouTube link – add here]**
