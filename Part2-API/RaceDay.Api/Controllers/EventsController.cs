@@ -321,7 +321,8 @@ public class EventsController : ControllerBase
         Province = e.Province,
         RegistrationDeadline = e.RegistrationDeadline,
         Status = e.Status,
-        CategoryCount = e.Categories.Count
+        CategoryCount = e.Categories.Count,
+        ImageUrl = e.ImageUrl
     };
 
     internal static EventDetailResponse ToDetail(Event e, Dictionary<int, int> confirmedByCategory) => new()

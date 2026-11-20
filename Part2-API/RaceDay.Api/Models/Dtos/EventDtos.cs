@@ -70,6 +70,9 @@ public class EventSummaryResponse
     public DateOnly RegistrationDeadline { get; set; }
     public string Status { get; set; } = string.Empty;
     public int CategoryCount { get; set; }
+
+    // Azure Blob Storage URL of the event banner, or null if none uploaded.
+    public string? ImageUrl { get; set; }
 }
 
 // A single event with everything needed for its detail page.
@@ -81,7 +84,6 @@ public class EventDetailResponse : EventSummaryResponse
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
     public string? RouteUrl { get; set; }
-    public string? ImageUrl { get; set; }
     public List<CategoryResponse> Categories { get; set; } = new();
 }
 
