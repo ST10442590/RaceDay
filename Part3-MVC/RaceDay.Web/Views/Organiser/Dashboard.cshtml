@@ -1,0 +1,79 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Organiser dashboard";
+}
+
+<section class="rd-page-head">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1>Hi @Model.OrganiserName</h1>
+            <p>Here's how your events are shaping up.</p>
+        </div>
+        <a class="btn btn-rd btn-lg" asp-action="Create"><i class="bi bi-plus-lg"></i> Create event</a>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.TotalEvents</strong><span>Events</span></div></div>
+        <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.UpcomingEvents</strong><span>Still to run</span></div></div>
+        <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.TotalEntries</strong><span>Confirmed entries</span></div></div>
+        <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.TotalResults</strong><span>Results captured</span></div></div>
+    </div>
+
+    @if (Model.Events.Count == 0)
+    {
+        <div class="rd-empty">
+            <i class="bi bi-calendar-plus"></i>
+            <h3>You haven't created any events yet</h3>
+            <p>Create your first event, add its categories, and open it for entries.</p>
+            <a class="btn btn-rd" asp-action="Create">Create event</a>
+        </div>
+    }
+    else
+    {
+        <div class="rd-table">
+            <table class="table align-middle">
+                <thead>
+                    <tr><th>Event</th><th>Date</th><th>Status</th><th class="text-center">Entries</th><th class="text-center">Results</th><th class="text-end">Manage</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Events)
+                    {
+                        var e = row.Event;
+                        var hasImage = !string.IsNullOrEmpty(e.ImageUrl);
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rd-thumb @(hasImage ? "" : UiHelpers.EventTypeClass(e.EventType))"
+                                         style="@(hasImage ? $"background-image:url('{e.ImageUrl}')" : null)">
+                                        @if (!hasImage)
+                                        {
+                                            <i class="bi @UiHelpers.EventTypeIcon(e.EventType)"></i>
+                                        }
+                                    </div>
+                                    <div>
+                                        <a class="fw-bold text-reset text-decoration-none" asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.Name</a>
+                                        <div class="small text-muted">@e.EventType · @UiHelpers.Distance(e.DistanceKm) · @e.City · @e.CategoryCount categor@(e.CategoryCount == 1 ? "y" : "ies")</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-nowrap">@UiHelpers.Date(e.EventDate)</td>
+                            <td><span class="rd-badge @UiHelpers.EventStatusClass(e.Status)">@e.Status</span></td>
+                            <td class="text-center fw-semibold">@row.ConfirmedEntries</td>
+                            <td class="text-center">@row.ResultsCaptured</td>
+                            <td class="text-end text-nowrap">
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@e.EventId" title="Edit event"><i class="bi bi-pencil"></i></a>
+                                    <a class="btn btn-outline-secondary" asp-controller="Categories" asp-action="Index" asp-route-eventId="@e.EventId" title="Categories"><i class="bi bi-list-ol"></i></a>
+                                    <a class="btn btn-outline-secondary" asp-action="Banner" asp-route-id="@e.EventId" title="Banner image"><i class="bi bi-image"></i></a>
+                                    <a class="btn btn-rd" asp-controller="Entries" asp-action="Index" asp-route-eventId="@e.EventId" title="Entries and results"><i class="bi bi-people"></i> Entries</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
