@@ -1,4 +1,4 @@
-name: Build and test Part 2 API
+name: Build and test RaceDay
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and run unit tests
+    name: Build API and MVC, run unit tests
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +20,40 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # RaceDay.slnx holds the Part 2 API, its tests and the Part 3 MVC app.
       - name: Restore dependencies
-        run: dotnet restore Part2-API/RaceDay.Part2.slnx
+        run: dotnet restore RaceDay.slnx
 
-      - name: Build
-        run: dotnet build Part2-API/RaceDay.Part2.slnx --configuration Release --no-restore
+      - name: Build API, tests and MVC
+        run: dotnet build RaceDay.slnx --configuration Release --no-restore
 
       - name: Run unit tests
-        run: dotnet test Part2-API/RaceDay.Part2.slnx --configuration Release --no-build --verbosity normal
+        run: dotnet test RaceDay.slnx --configuration Release --no-build --verbosity normal
+
+  docker:
+    name: Build and smoke-test the MVC Docker image
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: docker build -t raceday-web:ci Part3-MVC/RaceDay.Web
+
+      - name: Run the container
+        run: docker run -d --name raceday-web -p 8080:8080 raceday-web:ci
+
+      # The login page needs no API, so it proves the container serves the app.
+      - name: Check the site responds
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:8080/Account/Login > /dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://localhost:8080/Account/Login | grep -q "Welcome back"
+          echo "RaceDay MVC is running in Docker."
+
+      - name: Show container logs
+        if: always()
+        run: docker logs raceday-web
