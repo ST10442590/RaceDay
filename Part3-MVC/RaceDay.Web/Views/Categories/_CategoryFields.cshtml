@@ -1,0 +1,45 @@
+@model CategoryFormViewModel
+@* Shared by the add and edit category forms. *@
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="CategoryName" class="form-label"></label>
+        <input asp-for="CategoryName" class="form-control" placeholder="e.g. 21.1km Half Marathon or Under 20" />
+        <span asp-validation-for="CategoryName" class="text-danger small"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="CategoryType" class="form-label"></label>
+        <select asp-for="CategoryType" class="form-select js-category-type">
+            <option value="@CategoryTypes.Distance">Distance</option>
+            <option value="@CategoryTypes.Age">Age</option>
+        </select>
+    </div>
+    <div class="col-md-3 js-distance">
+        <label asp-for="DistanceKm" class="form-label"></label>
+        <input asp-for="DistanceKm" class="form-control" step="any" />
+        <span asp-validation-for="DistanceKm" class="text-danger small"></span>
+    </div>
+    <div class="col-6 col-md-3">
+        <label asp-for="MinAge" class="form-label"></label>
+        <input asp-for="MinAge" class="form-control" />
+        <span asp-validation-for="MinAge" class="text-danger small"></span>
+    </div>
+    <div class="col-6 col-md-3">
+        <label asp-for="MaxAge" class="form-label"></label>
+        <input asp-for="MaxAge" class="form-control" placeholder="No limit" />
+        <span asp-validation-for="MaxAge" class="text-danger small"></span>
+    </div>
+    <div class="col-6 col-md-2">
+        <label asp-for="EntryFee" class="form-label"></label>
+        <input asp-for="EntryFee" class="form-control" step="any" />
+        <span asp-validation-for="EntryFee" class="text-danger small"></span>
+    </div>
+    <div class="col-6 col-md-2">
+        <label asp-for="MaxParticipants" class="form-label"></label>
+        <input asp-for="MaxParticipants" class="form-control" />
+        <span asp-validation-for="MaxParticipants" class="text-danger small"></span>
+    </div>
+    <div class="col-md-2">
+        <label asp-for="StartTime" class="form-label"></label>
+        <input asp-for="StartTime" type="time" class="form-control" />
+    </div>
+</div>

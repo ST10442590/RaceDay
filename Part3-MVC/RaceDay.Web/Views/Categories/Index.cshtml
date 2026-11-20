@@ -1,0 +1,65 @@
+@model CategoriesViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = $"Categories · {e.Name}";
+}
+
+<section class="rd-page-head">
+    <div class="container">
+        <a class="text-white-50 small text-decoration-none" asp-controller="Organiser" asp-action="Dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        <h1>Categories</h1>
+        <p>@e.Name · @UiHelpers.Date(e.EventDate) · <span class="rd-badge @UiHelpers.EventStatusClass(e.Status)">@e.Status</span></p>
+    </div>
+</section>
+
+<div class="container">
+    <div class="rd-table mb-4">
+        <table class="table align-middle">
+            <thead>
+                <tr><th>Category</th><th>Type</th><th>Ages</th><th>Fee</th><th>Start</th><th class="text-center">Entries</th><th class="text-end"></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var c in e.Categories)
+                {
+                    var taken = c.MaxParticipants - c.PlacesRemaining;
+                    <tr>
+                        <td class="fw-semibold">@c.CategoryName</td>
+                        <td>@c.CategoryType@(c.DistanceKm is null ? "" : " · " + UiHelpers.Distance(c.DistanceKm.Value))</td>
+                        <td>@c.AgeRange</td>
+                        <td>@UiHelpers.Money(c.EntryFee)</td>
+                        <td>@UiHelpers.Time(c.StartTime)</td>
+                        <td class="text-center">
+                            @taken / @c.MaxParticipants
+                            <div class="progress mt-1" style="height:5px"><div class="progress-bar" style="width:@(c.MaxParticipants == 0 ? 0 : taken * 100 / c.MaxParticipants)%;background:var(--rd-orange)"></div></div>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@c.CategoryId"><i class="bi bi-pencil"></i></a>
+                            <form class="d-inline" asp-action="Delete" asp-route-id="@c.CategoryId" asp-route-eventId="@e.EventId" method="post"
+                                  onsubmit="return confirm('Remove this category?');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (e.Categories.Count == 0)
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No categories yet. Add the first one below.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <form asp-action="Create" asp-route-eventId="@e.EventId" method="post" class="rd-form-card">
+        <h2 class="h4">Add a category</h2>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+        <partial name="_CategoryFields" for="NewCategory" />
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-rd" type="submit"><i class="bi bi-plus-lg"></i> Add category</button>
+            <a class="btn btn-rd-outline" asp-controller="Organiser" asp-action="Edit" asp-route-id="@e.EventId">Edit event / open entries</a>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <partial name="_CategoryScript" />
+}

@@ -1,0 +1,13 @@
+<script>
+    // A distance is only needed for Distance categories.
+    document.querySelectorAll('.js-category-type').forEach(function (select) {
+        var form = select.closest('form');
+        var update = function () {
+            form.querySelectorAll('.js-distance').forEach(function (el) {
+                el.classList.toggle('d-none', select.value !== 'Distance');
+            });
+        };
+        select.addEventListener('change', update);
+        update();
+    });
+</script>
