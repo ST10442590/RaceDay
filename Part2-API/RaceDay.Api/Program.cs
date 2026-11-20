@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RaceDay.Api.Controllers;
 using RaceDay.Api.Data;
 using RaceDay.Api.Models;
+using RaceDay.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,17 @@ builder.Services.AddDbContext<RaceDayDbContext>(options =>
 
 // Hashes and verifies passwords, so none are ever stored as plain text.
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+
+// Event banner images are stored in Azure Blob Storage. The connection
+// string comes from configuration (user secrets locally), never from code.
+builder.Services.AddSingleton<IImageStorage, BlobImageStorage>();
+
+// Live weather for event venues, from the free Open-Meteo service.
+builder.Services.AddHttpClient(EventWeatherController.HttpClientName, client =>
+{
+    client.BaseAddress = new Uri("https://api.open-meteo.com/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 
 // Server-side session state. The session holds the user's id and role; the
 // browser only receives an opaque, HttpOnly cookie that points at it.
