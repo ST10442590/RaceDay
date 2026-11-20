@@ -371,4 +371,4 @@ Azure and Open-Meteo are replaced with in-memory fakes in the tests, so they nev
 
 ## Video presentation
 
-Part 3 walkthrough: **[YouTube link – add here]**
+Part 3 walkthrough: **https://youtu.be/KzBV2Kbn16Y**
