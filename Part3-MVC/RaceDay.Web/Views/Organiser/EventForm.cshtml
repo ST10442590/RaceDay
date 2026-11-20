@@ -1,79 +1,127 @@
-@model DashboardViewModel
+@model EventFormViewModel
 @{
-    ViewData["Title"] = "Organiser dashboard";
+    ViewData["Title"] = Model.IsEdit ? $"Edit {Model.Name}" : "Create event";
 }
 
 <section class="rd-page-head">
-    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <h1>Hi @Model.OrganiserName</h1>
-            <p>Here's how your events are shaping up.</p>
-        </div>
-        <a class="btn btn-rd btn-lg" asp-action="Create"><i class="bi bi-plus-lg"></i> Create event</a>
+    <div class="container">
+        <a class="text-white-50 small text-decoration-none" asp-action="Dashboard"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        <h1>@(Model.IsEdit ? "Edit event" : "Create an event")</h1>
+        <p>@(Model.IsEdit ? Model.Name : "Add the details now; you'll add categories next.")</p>
     </div>
 </section>
 
-<div class="container">
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.TotalEvents</strong><span>Events</span></div></div>
-        <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.UpcomingEvents</strong><span>Still to run</span></div></div>
-        <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.TotalEntries</strong><span>Confirmed entries</span></div></div>
-        <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.TotalResults</strong><span>Results captured</span></div></div>
-    </div>
+<div class="container" style="max-width:60rem">
+    <form asp-action="@(Model.IsEdit ? "Edit" : "Create")" asp-route-id="@Model.EventId" method="post" class="rd-form-card">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+        <input type="hidden" asp-for="EventId" />
 
-    @if (Model.Events.Count == 0)
-    {
-        <div class="rd-empty">
-            <i class="bi bi-calendar-plus"></i>
-            <h3>You haven't created any events yet</h3>
-            <p>Create your first event, add its categories, and open it for entries.</p>
-            <a class="btn btn-rd" asp-action="Create">Create event</a>
+        <h2 class="h4">The event</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-md-8">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="e.g. Jacaranda City Half Marathon" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="EventTypeId" class="form-label"></label>
+                <select asp-for="EventTypeId" class="form-select"
+                        asp-items="@(new SelectList(Model.EventTypes, nameof(EventTypeItem.EventTypeId), nameof(EventTypeItem.TypeName)))"></select>
+            </div>
+            <div class="col-12">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Route highlights, water points, medals, parking..."></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
+            </div>
         </div>
-    }
-    else
+
+        <h2 class="h4">When</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label asp-for="EventDate" class="form-label"></label>
+                <input asp-for="EventDate" type="date" class="form-control" />
+                <span asp-validation-for="EventDate" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="StartTime" class="form-label"></label>
+                <input asp-for="StartTime" type="time" class="form-control" />
+                <span asp-validation-for="StartTime" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="RegistrationDeadline" class="form-label"></label>
+                <input asp-for="RegistrationDeadline" type="date" class="form-control" />
+                <span asp-validation-for="RegistrationDeadline" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="DistanceKm" class="form-label"></label>
+                <input asp-for="DistanceKm" class="form-control" step="any" />
+                <span asp-validation-for="DistanceKm" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <h2 class="h4">Where</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-md-5">
+                <label asp-for="VenueName" class="form-label"></label>
+                <input asp-for="VenueName" class="form-control" />
+                <span asp-validation-for="VenueName" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="City" class="form-label"></label>
+                <input asp-for="City" class="form-control" />
+                <span asp-validation-for="City" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Province" class="form-label"></label>
+                <select asp-for="Province" class="form-select" asp-items="@(new SelectList(HomeViewModel.Provinces))"></select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Latitude" class="form-label"></label>
+                <input asp-for="Latitude" class="form-control" step="any" />
+                <span asp-validation-for="Latitude" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Longitude" class="form-label"></label>
+                <input asp-for="Longitude" class="form-control" step="any" />
+                <span asp-validation-for="Longitude" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="RouteUrl" class="form-label"></label>
+                <input asp-for="RouteUrl" class="form-control" placeholder="https://" />
+                <span asp-validation-for="RouteUrl" class="text-danger small"></span>
+            </div>
+        </div>
+
+        @if (Model.IsEdit)
+        {
+            <h2 class="h4">Status</h2>
+            <p class="small text-muted">Participants can only enter while the event is <strong>Open</strong>. Mark it <strong>Completed</strong> once results are in.</p>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                @foreach (var status in EventStatuses.All)
+                {
+                    <input type="radio" class="btn-check" asp-for="Status" value="@status" id="status-@status" />
+                    <label class="btn btn-sm btn-outline-secondary rounded-pill" for="status-@status">
+                        <span class="rd-badge @UiHelpers.EventStatusClass(status)">@status</span>
+                    </label>
+                }
+            </div>
+        }
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-rd btn-lg">@(Model.IsEdit ? "Save changes" : "Create event")</button>
+            <a class="btn btn-rd-outline btn-lg" asp-action="Dashboard">Cancel</a>
+        </div>
+    </form>
+
+    @if (Model.IsEdit)
     {
-        <div class="rd-table">
-            <table class="table align-middle">
-                <thead>
-                    <tr><th>Event</th><th>Date</th><th>Status</th><th class="text-center">Entries</th><th class="text-center">Results</th><th class="text-end">Manage</th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var row in Model.Events)
-                    {
-                        var e = row.Event;
-                        var hasImage = !string.IsNullOrEmpty(e.ImageUrl);
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="rd-thumb @(hasImage ? "" : UiHelpers.EventTypeClass(e.EventType))"
-                                         style="@(hasImage ? $"background-image:url('{e.ImageUrl}')" : null)">
-                                        @if (!hasImage)
-                                        {
-                                            <i class="bi @UiHelpers.EventTypeIcon(e.EventType)"></i>
-                                        }
-                                    </div>
-                                    <div>
-                                        <a class="fw-bold text-reset text-decoration-none" asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.Name</a>
-                                        <div class="small text-muted">@e.EventType · @UiHelpers.Distance(e.DistanceKm) · @e.City · @e.CategoryCount categor@(e.CategoryCount == 1 ? "y" : "ies")</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-nowrap">@UiHelpers.Date(e.EventDate)</td>
-                            <td><span class="rd-badge @UiHelpers.EventStatusClass(e.Status)">@e.Status</span></td>
-                            <td class="text-center fw-semibold">@row.ConfirmedEntries</td>
-                            <td class="text-center">@row.ResultsCaptured</td>
-                            <td class="text-end text-nowrap">
-                                <div class="btn-group btn-group-sm">
-                                    <a class="btn btn-outline-secondary" asp-action="Edit" asp-route-id="@e.EventId" title="Edit event"><i class="bi bi-pencil"></i></a>
-                                    <a class="btn btn-outline-secondary" asp-controller="Categories" asp-action="Index" asp-route-eventId="@e.EventId" title="Categories"><i class="bi bi-list-ol"></i></a>
-                                    <a class="btn btn-outline-secondary" asp-action="Banner" asp-route-id="@e.EventId" title="Banner image"><i class="bi bi-image"></i></a>
-                                    <a class="btn btn-rd" asp-controller="Entries" asp-action="Index" asp-route-eventId="@e.EventId" title="Entries and results"><i class="bi bi-people"></i> Entries</a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="rd-panel mt-4 border-danger-subtle">
+            <h2 class="h5 text-danger">Delete this event</h2>
+            <p class="small text-muted">Only events with no confirmed entries can be deleted. Otherwise set the status to Cancelled.</p>
+            <form asp-action="Delete" asp-route-id="@Model.EventId" method="post" onsubmit="return confirm('Delete this event permanently?');">
+                <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash"></i> Delete event</button>
+            </form>
         </div>
     }
 </div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
