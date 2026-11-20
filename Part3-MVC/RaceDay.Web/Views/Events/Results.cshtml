@@ -1,6 +1,6 @@
 @model EventResultsViewModel
 @{
-    ViewData["Title"] = $"Results · {Model.Event.Name}";
+    ViewData["Title"] = $"Results \u00B7 {Model.Event.Name}";
     var myId = Context.Session.GetUserId();
 }
 
@@ -8,7 +8,7 @@
     <div class="container">
         <a class="text-white-50 small text-decoration-none" asp-action="Details" asp-route-id="@Model.Event.EventId"><i class="bi bi-arrow-left"></i> @Model.Event.Name</a>
         <h1>Results</h1>
-        <p>@UiHelpers.Date(Model.Event.EventDate) · @Model.Event.VenueName, @Model.Event.City</p>
+        <p>@UiHelpers.Date(Model.Event.EventDate) &middot; @Model.Event.VenueName, @Model.Event.City</p>
     </div>
 </section>
 
@@ -37,7 +37,7 @@
                     {
                         var podium = r.FinishPosition is >= 1 and <= 3 ? $"rd-podium-{r.FinishPosition}" : "";
                         <tr class="@(r.ParticipantId == myId ? "table-warning" : "")">
-                            <td class="rd-position @podium">@(r.FinishPosition is null ? "–" : UiHelpers.Ordinal(r.FinishPosition.Value))</td>
+                            <td class="rd-position @podium">@(r.FinishPosition is null ? "\u2013" : UiHelpers.Ordinal(r.FinishPosition.Value))</td>
                             <td>@r.ParticipantName</td>
                             <td>@r.RaceNumber</td>
                             <td class="fw-semibold">@UiHelpers.FinishTime(r.FinishTime)</td>

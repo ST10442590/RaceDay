@@ -55,7 +55,7 @@
                             <tr>
                                 <td>
                                     <strong>@c.CategoryName</strong>
-                                    <div class="small text-muted">@c.CategoryType@(c.DistanceKm is null ? "" : " · " + UiHelpers.Distance(c.DistanceKm.Value))</div>
+                                    <div class="small text-muted">@c.CategoryType@(c.DistanceKm is null ? "" : " \u00B7 " + UiHelpers.Distance(c.DistanceKm.Value))</div>
                                 </td>
                                 <td>@c.AgeRange</td>
                                 <td>@UiHelpers.Time(c.StartTime ?? e.StartTime)</td>
@@ -78,7 +78,7 @@
                     <i class="bi @UiHelpers.WeatherIcon(w.Conditions) rd-weather-icon"></i>
                     <div class="flex-grow-1">
                         <small class="text-muted text-uppercase fw-semibold">@(w.IsRaceDayForecast ? "Race-day forecast" : "Weather at the venue today")</small>
-                        <div class="rd-weather-temp">@w.Temperature.ToString("0")° <span>/ @w.MinTemperature.ToString("0")°</span></div>
+                        <div class="rd-weather-temp">@w.Temperature.ToString("0")&deg; <span>/ @w.MinTemperature.ToString("0")&deg;</span></div>
                         <div>@w.Conditions</div>
                     </div>
                     <div class="text-end small">
