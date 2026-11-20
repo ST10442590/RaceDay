@@ -1,0 +1,86 @@
+@model MyEventsViewModel
+@{
+    ViewData["Title"] = "My events";
+}
+
+<section class="rd-page-head">
+    <div class="container">
+        <h1>My events</h1>
+        <p>Your race entries and race numbers.</p>
+    </div>
+</section>
+
+<div class="container">
+    <h2 class="h3 mb-3">Coming up</h2>
+    @if (Model.Upcoming.Count == 0)
+    {
+        <div class="rd-empty mb-4">
+            <i class="bi bi-flag"></i>
+            <h3>No upcoming races</h3>
+            <p>Find an event and enter it to see it here.</p>
+            <a class="btn btn-rd" asp-controller="Home" asp-action="Index">Browse events</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            @foreach (var e in Model.Upcoming)
+            {
+                var cancelled = e.Status == EnrolmentStatuses.Cancelled;
+                <div class="col-md-6">
+                    <div class="rd-panel h-100 d-flex gap-3 align-items-center @(cancelled ? "opacity-75" : "")">
+                        <div class="rd-race-number">@(e.RaceNumber ?? "—")</div>
+                        <div class="flex-grow-1">
+                            <a class="fw-bold fs-5 text-decoration-none text-reset" asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.EventName</a>
+                            <div class="rd-meta">@e.CategoryName · @UiHelpers.Date(e.EventDate)</div>
+                            <span class="rd-badge @UiHelpers.EnrolmentStatusClass(e.Status) mt-2">@e.Status</span>
+                        </div>
+                        @if (!cancelled)
+                        {
+                            <form asp-action="Cancel" asp-route-id="@e.EnrolmentId" method="post"
+                                  onsubmit="return confirm('Cancel this entry? Your place will be released.');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit" title="Cancel entry"><i class="bi bi-x-lg"></i></button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <h2 class="h3 mb-3">Past races</h2>
+    @if (Model.Past.Count == 0)
+    {
+        <p class="text-muted">No past races yet.</p>
+    }
+    else
+    {
+        <div class="rd-table">
+            <table class="table align-middle">
+                <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Race no.</th><th>Entry</th><th class="text-end">Result</th></tr></thead>
+                <tbody>
+                    @foreach (var e in Model.Past)
+                    {
+                        <tr>
+                            <td><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.EventName</a></td>
+                            <td>@UiHelpers.Date(e.EventDate)</td>
+                            <td>@e.CategoryName</td>
+                            <td>@e.RaceNumber</td>
+                            <td><span class="rd-badge @UiHelpers.EnrolmentStatusClass(e.Status)">@e.Status</span></td>
+                            <td class="text-end">
+                                @if (Model.EnrolmentsWithResults.Contains(e.EnrolmentId))
+                                {
+                                    <a class="btn btn-sm btn-rd" asp-action="MyResults"><i class="bi bi-trophy"></i> View</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Awaiting results</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

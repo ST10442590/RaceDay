@@ -1,0 +1,63 @@
+@model List<MyResultRow>
+@{
+    ViewData["Title"] = "My results";
+    var finished = Model.Where(r => r.Result.ResultStatus == ResultStatuses.Finished).ToList();
+}
+
+<section class="rd-page-head">
+    <div class="container">
+        <h1>My results</h1>
+        <p>Your finish times and positions in every race you've completed.</p>
+    </div>
+</section>
+
+<div class="container">
+    @if (Model.Count == 0)
+    {
+        <div class="rd-empty">
+            <i class="bi bi-trophy"></i>
+            <h3>No results yet</h3>
+            <p class="mb-0">Your results will appear here after the organiser has captured them.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3"><div class="rd-stat"><strong>@Model.Count</strong><span>Races</span></div></div>
+            <div class="col-6 col-md-3"><div class="rd-stat"><strong>@finished.Count</strong><span>Finishes</span></div></div>
+            <div class="col-6 col-md-3"><div class="rd-stat"><strong>@finished.Count(r => r.Result.FinishPosition <= 3)</strong><span>Podiums</span></div></div>
+            <div class="col-6 col-md-3"><div class="rd-stat"><strong>@(finished.Count == 0 ? "–" : UiHelpers.Ordinal(finished.Min(r => r.Result.FinishPosition ?? int.MaxValue)))</strong><span>Best position</span></div></div>
+        </div>
+
+        <div class="d-grid gap-3">
+            @foreach (var row in Model)
+            {
+                var r = row.Result;
+                <div class="rd-result-card">
+                    <div class="rd-result-place">
+                        @if (r.FinishPosition is not null)
+                        {
+                            <div><strong>@UiHelpers.Ordinal(r.FinishPosition.Value)</strong><small>of @row.FinishersInCategory</small></div>
+                        }
+                        else
+                        {
+                            <div><strong>@r.ResultStatus</strong></div>
+                        }
+                    </div>
+                    <div>
+                        <a class="fw-bold fs-5 text-decoration-none text-reset" asp-controller="Events" asp-action="Results" asp-route-id="@r.EventId">@r.EventName</a>
+                        <div class="rd-meta">@r.CategoryName · @UiHelpers.Date(row.EventDate) · Race no. @r.RaceNumber</div>
+                        @if (r.FinishPosition is not null)
+                        {
+                            <div class="mt-1">@UiHelpers.Ordinal(r.FinishPosition.Value) out of @row.FinishersInCategory finishers</div>
+                        }
+                    </div>
+                    <div class="text-end">
+                        <div class="rd-result-time">@UiHelpers.FinishTime(r.FinishTime)</div>
+                        <span class="rd-badge @UiHelpers.ResultStatusClass(r.ResultStatus)">@ResultStatuses.Describe(r.ResultStatus)</span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
